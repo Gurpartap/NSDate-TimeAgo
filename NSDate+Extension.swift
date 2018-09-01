@@ -9,23 +9,27 @@
 
 import Foundation
 
+private final class DummyClass: NSObject {}
+
 private struct Helper {
     
-    static let bundle: Bundle? = {
-        let resourcePath: String?
-        if let frameworkBundle = Bundle(identifier: "com.kevinlawler.NSDateTimeAgo") {
-            // Load from Framework
-            resourcePath = frameworkBundle.resourcePath
-        } else {
-            // Load from Main Bundle
-            resourcePath = Bundle.main.resourcePath
-        }
-        guard let pathString = resourcePath else {
-            return nil
-        }
-        let path = URL(fileURLWithPath: pathString).appendingPathComponent("NSDateTimeAgo.bundle")
-        return Bundle(url: path)
-    }()
+	static let bundle: Bundle? = {
+		// Need a class from the framework to get it's bundle.
+        // Bundle identifier can also be used, but it might changes.
+        // Now it's something like org.cocoapods.exampleFramework for this bundle
+		let frameworkBundle = Bundle(for: DummyClass.self)
+
+		var resourceBundle: Bundle?
+
+		// "exampleFrameworkResources" is the name of the resource bundle defined in .podspec
+		if let resourceBundleUrl = frameworkBundle.url(forResource: "NSDateTimeAgo", withExtension: "bundle") {
+			resourceBundle = Bundle(url: resourceBundleUrl)
+		}
+
+		assert(resourceBundle != nil, "resource bundle not found")
+
+		return resourceBundle
+	}()
     
     static func localizedStrings(for key: String) -> String {
         guard let bundle = bundle else {
